@@ -17,6 +17,9 @@ from app.services.client_service import (
 from app.services.workflow_service import (
     run_advisory_workflow
 )
+from app.tools.client_listing_tool import (
+    list_clients
+)
 router = APIRouter()
 
 
@@ -26,24 +29,34 @@ async def health_check():
         "status": "healthy"
     }
 
+@router.get("/clients")
+async def fetch_clients():
+
+    clients = await list_clients()
+
+    return {
+        "clients": clients
+    }
+
 @router.post(
     "/advisory/run/{client_id}"
 )
 async def run_advisory_analysis(
     client_id: str
 ):
+    try:
+        result = await run_advisory_workflow(
+            client_id
+        )
 
-    result = await run_advisory_workflow(
-        client_id
-    )
+        return result
 
-    return {
-        "message":
-            "Advisory workflow completed",
+    except Exception as error:
 
-        "result":
-            result
-    }
+        return {
+            "status": "failed",
+            "error": str(error)
+        }
 
 @router.post("/workflow/start")
 async def start_workflow():

@@ -75,5 +75,16 @@ async def orchestrator_agent(state):
         state["execution_logs"].append(
             "Routing directly to advisory workflow"
         )
+    if len(state["errors"]) >= 2:
+
+        state["next_step"] = (
+            "advisory_agent"
+        )
+
+        state["execution_logs"].append(
+            "Too many workflow failures detected. Routing directly to advisory."
+        )
+
+        return state
 
     return state
