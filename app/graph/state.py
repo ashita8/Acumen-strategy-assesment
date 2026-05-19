@@ -24,4 +24,6 @@ class WorkflowState(TypedDict):
 
     advisory_report: Dict
 
+    next_step: str
+
     execution_logs: List[str]

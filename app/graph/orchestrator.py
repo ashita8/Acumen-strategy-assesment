@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from langgraph.graph import (
     StateGraph,
     START,
@@ -88,4 +90,34 @@ def build_workflow():
         END
     )
 
-    return workflow.compile()
+    compiled_workflow = workflow.compile()
+
+    save_workflow_image(
+        compiled_workflow
+    )
+
+    return compiled_workflow
+
+
+def save_workflow_image(
+    workflow
+):
+
+    docs_path = Path("docs")
+
+    docs_path.mkdir(
+        exist_ok=True
+    )
+
+    image_bytes = (
+        workflow.get_graph()
+        .draw_mermaid_png()
+    )
+
+    output_path = (
+        docs_path / "workflow.png"
+    )
+
+    with open(output_path, "wb") as file:
+
+        file.write(image_bytes)
