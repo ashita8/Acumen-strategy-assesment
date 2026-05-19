@@ -29,3 +29,5 @@ class WorkflowState(TypedDict):
     execution_logs: List[str]
 
     crm_profile: Dict
+
+    market_context: Dict

@@ -11,6 +11,9 @@ async def advisory_agent(state):
     "risk_assessment",
     {}
     )
+    market_context = (
+    state["market_context"]
+    )
 
     risk_level = risk_assessment.get(
         "risk_level",
@@ -34,7 +37,15 @@ async def advisory_agent(state):
         recommendations.append(
             "Maintain current investment strategy"
         )
+    if (
+    market_context[
+        "market_sentiment"
+    ] == "bearish"
+    ):
 
+        recommendations.append(
+            "Limit high-risk equity exposure during current market conditions"
+        )
     state["advisory_report"] = {
         "risk_level": risk_level,
         "recommendations": recommendations,

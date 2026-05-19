@@ -6,6 +6,9 @@ from app.tools.client_data_tool import (
 from app.tools.crm_tool import (
     fetch_crm_profile
 )
+from app.tools.market_context_tool import (
+    fetch_market_context
+)
 
 async def data_fetcher_agent(state):
 
@@ -31,6 +34,13 @@ async def data_fetcher_agent(state):
 
     state["crm_profile"] = crm_profile
 
+    market_context = (
+    await fetch_market_context()
+    )
+
+    state["market_context"] = (
+        market_context
+    )
     state["client_profile"] = (
         financial_data["client_profile"]
     )
