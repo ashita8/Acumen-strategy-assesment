@@ -1,12 +1,8 @@
-from sqlalchemy.orm import Session
-
-from app.core.database import SessionLocal
-
-from app.models.client_model import Client
-from app.models.transaction_model import Transaction
-from app.models.investments_model import Investment
-
 from app.services.logging_service import logger
+
+from app.tools.client_data_tool import (
+    fetch_client_financial_data
+)
 
 
 async def data_fetcher_agent(state):
@@ -15,70 +11,32 @@ async def data_fetcher_agent(state):
         "Fetching client financial data"
     )
 
-    db: Session = SessionLocal()
-
-    try:
-
-        client = (
-            db.query(Client)
-            .filter(
-                Client.client_id ==
-                state["client_id"]
-            )
-            .first()
+    financial_data = (
+        await fetch_client_financial_data(
+            state["client_id"]
         )
-        
-        if not client:
-            state["execution_logs"].append(
-                "Client not found"
-            )
+    )
 
-            raise ValueError(
-                "Client does not exist"
-            )
+    if not financial_data:
 
-        transactions = (
-            db.query(Transaction)
-            .filter(
-                Transaction.client_id ==
-                state["client_id"]
-            )
-            .all()
+        raise ValueError(
+            "Client data not found"
         )
 
-        investments = (
-            db.query(Investment)
-            .filter(
-                Investment.client_id ==
-                state["client_id"]
-            )
-            .all()
-        )
+    state["client_profile"] = (
+        financial_data["client_profile"]
+    )
 
-        state["client_profile"] = {
-            "client_id": client.client_id,
-            "name": client.name,
-            "monthly_income": client.monthly_income,
-            "monthly_expenses": client.monthly_expenses,
-            "savings_balance": client.savings_balance
-        }
+    state["transactions"] = (
+        financial_data["transactions"]
+    )
 
-        state["transactions"] = [
-            transaction.__dict__
-            for transaction in transactions
-        ]
+    state["investments"] = (
+        financial_data["investments"]
+    )
 
-        state["investments"] = [
-            investment.__dict__
-            for investment in investments
-        ]
+    state["execution_logs"].append(
+        "Client financial data fetched"
+    )
 
-        state["execution_logs"].append(
-            "Client financial data fetched"
-        )
-
-        return state
-
-    finally:
-
-        db.close()
+    return state
