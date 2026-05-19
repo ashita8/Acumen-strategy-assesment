@@ -31,3 +31,5 @@ class WorkflowState(TypedDict):
     crm_profile: Dict
 
     market_context: Dict
+
+    errors: List[Dict]

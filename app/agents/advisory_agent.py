@@ -51,11 +51,12 @@ async def advisory_agent(state):
         "recommendations": recommendations,
         "anomaly_count": len(
             state["anomalies"]
-        )
+        ),
+        "workflow_errors": state.get("errors", [])
     }
 
     state["execution_logs"].append(
         "Advisory report generated"
     )
-
+    
     return state
