@@ -27,6 +27,15 @@ async def data_fetcher_agent(state):
             )
             .first()
         )
+        
+        if not client:
+            state["execution_logs"].append(
+                "Client not found"
+            )
+
+            raise ValueError(
+                "Client does not exist"
+            )
 
         transactions = (
             db.query(Transaction)

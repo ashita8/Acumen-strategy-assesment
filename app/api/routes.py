@@ -14,6 +14,9 @@ from app.services.faker_service import (
 from app.services.client_service import (
     create_client
 )
+from app.services.workflow_service import (
+    run_advisory_workflow
+)
 router = APIRouter()
 
 
@@ -23,6 +26,24 @@ async def health_check():
         "status": "healthy"
     }
 
+@router.post(
+    "/advisory/run/{client_id}"
+)
+async def run_advisory_analysis(
+    client_id: str
+):
+
+    result = await run_advisory_workflow(
+        client_id
+    )
+
+    return {
+        "message":
+            "Advisory workflow completed",
+
+        "result":
+            result
+    }
 
 @router.post("/workflow/start")
 async def start_workflow():
