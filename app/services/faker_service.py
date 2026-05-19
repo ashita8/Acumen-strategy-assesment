@@ -21,6 +21,23 @@ ASSET_TYPES = [
     "crypto"
 ]
 
+RISK_APPETITES = [
+    "conservative",
+    "moderate",
+    "aggressive"
+]
+
+CLIENT_SEGMENTS = [
+    "retail",
+    "mass_affluent",
+    "HNI"
+]
+
+INVESTMENT_GOALS = [
+    "retirement",
+    "wealth_growth",
+    "capital_preservation"
+]
 
 def generate_mock_client():
 
@@ -75,4 +92,36 @@ def generate_mock_client():
         },
         "transactions": transactions,
         "investments": investments
+    }
+
+def generate_crm_profile(
+    client_id: str
+):
+
+    return {
+        "client_id": client_id,
+
+        "client_segment":
+            random.choice(
+                CLIENT_SEGMENTS
+            ),
+
+        "risk_appetite":
+            random.choice(
+                RISK_APPETITES
+            ),
+
+        "investment_goal":
+            random.choice(
+                INVESTMENT_GOALS
+            ),
+
+        "relationship_years":
+            random.randint(1, 15),
+
+        "credit_score":
+            random.randint(600, 850),
+
+        "advisor_notes":
+            fake.sentence()
     }

@@ -27,3 +27,5 @@ class WorkflowState(TypedDict):
     next_step: str
 
     execution_logs: List[str]
+
+    crm_profile: Dict
