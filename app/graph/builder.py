@@ -1,6 +1,6 @@
 from langgraph.graph import START, END, StateGraph
 
-from app.agents.data_fetcher import (
+from app.agents.data_fetcher_agent import (
     data_fetcher_agent
 )
 
