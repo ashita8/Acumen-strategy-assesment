@@ -7,12 +7,16 @@ from app.services.logging_service import logger
 app = FastAPI(
     title=settings.APP_NAME
 )
+from app.core.init_db import init_db
+
+    
 
 app.include_router(router)
 
 
 @app.on_event("startup")
 async def startup_event():
+    init_db()
     logger.info("Starting Wealth Advisor AI Service")
 
 

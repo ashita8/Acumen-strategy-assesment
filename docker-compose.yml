@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16
+
+    container_name: wealth-advisor-postgres
+
+    restart: always
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: wealth_advisor
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+volumes:
+  postgres_data:
