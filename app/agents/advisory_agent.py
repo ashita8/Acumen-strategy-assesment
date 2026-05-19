@@ -7,9 +7,14 @@ async def advisory_agent(state):
         "Generating advisory report"
     )
 
-    risk_level = (
-        state["risk_assessment"]
-        ["risk_level"]
+    risk_assessment = state.get(
+    "risk_assessment",
+    {}
+    )
+
+    risk_level = risk_assessment.get(
+        "risk_level",
+        "LOW"
     )
 
     recommendations = []

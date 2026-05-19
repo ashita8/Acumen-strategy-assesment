@@ -16,6 +16,10 @@ from app.agents.portfolio_analyzer_agent import (
     portfolio_analyzer_agent
 )
 
+from app.agents.orchestrator_agent import (
+    orchestrator_agent
+)
+
 from app.agents.risk_evaluator_agent import (
     risk_evaluator_agent
 )
@@ -27,6 +31,11 @@ from app.agents.anomaly_detector_agent import (
 from app.agents.advisory_agent import (
     advisory_agent
 )
+
+
+def route_workflow(state):
+
+    return state["next_step"]
 
 
 def build_workflow():
@@ -43,6 +52,11 @@ def build_workflow():
     workflow.add_node(
         "portfolio_analyzer_agent",
         portfolio_analyzer_agent
+    )
+
+    workflow.add_node(
+        "orchestrator_agent",
+        orchestrator_agent
     )
 
     workflow.add_node(
@@ -72,7 +86,19 @@ def build_workflow():
 
     workflow.add_edge(
         "portfolio_analyzer_agent",
-        "risk_evaluator_agent"
+        "orchestrator_agent"
+    )
+
+    workflow.add_conditional_edges(
+        "orchestrator_agent",
+        route_workflow,
+        {
+            "risk_evaluator_agent":
+                "risk_evaluator_agent",
+
+            "advisory_agent":
+                "advisory_agent"
+        }
     )
 
     workflow.add_edge(
@@ -99,9 +125,7 @@ def build_workflow():
     return compiled_workflow
 
 
-def save_workflow_image(
-    workflow
-):
+def save_workflow_image(workflow):
 
     docs_path = Path("docs")
 
