@@ -19,6 +19,9 @@ from app.services.client_service import (
 from app.services.workflow_service import (
     run_advisory_workflow
 )
+from app.models.crm_profile_model import (
+    CRMProfile
+)
 
 from app.tools.client_listing_tool import (
     list_clients
@@ -140,122 +143,161 @@ async def run_advisory_analysis(
 
 
 # =========================================================
-# Manual Workflow Trigger
+# Create HITL Test Client
 # =========================================================
 
-@router.post("/workflow/start")
-async def start_workflow():
-
-    try:
-
-        logger.info(
-            "Starting manual workflow"
-        )
-
-        graph = build_graph()
-
-        initial_state = {
-
-            "client_id": None,
-
-            "client_profile": {},
-
-            "transactions": [],
-
-            "investments": [],
-
-            "portfolio_analysis": {},
-
-            "risk_assessment": {},
-
-            "anomalies": [],
-
-            "advisory_report": {},
-
-            "next_step": None,
-
-            "execution_logs": [],
-
-            "crm_profile": {},
-
-            "market_context": {},
-
-            "errors": []
-        }
-
-        config = {
-            "configurable": {
-                "thread_id": (
-                    "manual_workflow_session"
-                )
-            }
-        }
-
-        result = await graph.ainvoke(
-            initial_state,
-            config=config
-        )
-
-        formatted_response = (
-            format_final_response(result)
-        )
-
-        return {
-            "status": "success",
-            "data": formatted_response
-        }
-
-    except Exception as error:
-
-        logger.error(
-            f"Manual workflow failed: "
-            f"{str(error)}",
-            exc_info=True
-        )
-
-        return {
-            "status": "failed",
-            "error": str(error)
-        }
-
-
-# =========================================================
-# Generate Mock Client
-# =========================================================
-
-@router.post("/clients/mock")
-async def ingest_mock_client(
+@router.post("/clients/hitl")
+async def create_hitl_test_client(
     db: Session = Depends(get_db)
 ):
 
     try:
 
         logger.info(
-            "Generating mock client"
+            "Creating HITL test client"
         )
 
-        payload = generate_mock_client()
+        payload = {
+
+            "client": {
+
+                "client_id":
+                    "hitl-test-client",
+
+                "name":
+                    "High Risk HITL Client",
+
+                "monthly_income":
+                    5000,
+
+                "monthly_expenses":
+                    4800,
+
+                "savings_balance":
+                    500
+            },
+
+            
+            "transactions": [
+
+                {
+                    "transaction_id": "tx-1",
+                    "amount": 1000,
+                    "category": "groceries",
+                    "transaction_type": "debit"
+                },
+
+                {
+                    "transaction_id": "tx-2",
+                    "amount": 1200,
+                    "category": "shopping",
+                    "transaction_type": "debit"
+                },
+
+                {
+                    "transaction_id": "tx-3",
+                    "amount": 900,
+                    "category": "travel",
+                    "transaction_type": "debit"
+                },
+
+                {
+                    "transaction_id": "tx-4",
+                    "amount": 1500,
+                    "category": "utilities",
+                    "transaction_type": "debit"
+                },
+
+                # =====================================
+                # Intentional anomaly
+                # =====================================
+
+                {
+                    "transaction_id": "tx-5",
+                    "amount": 250000,
+                    "category": "wire_transfer",
+                    "transaction_type": "debit"
+                }
+            ],
+
+            "investments": [
+
+                {
+                    "asset_name":
+                        "Crypto Futures",
+
+                    "asset_type":
+                        "crypto",
+
+                    "current_value":
+                        250000
+                },
+
+                {
+                    "asset_name":
+                        "Leveraged Options",
+
+                    "asset_type":
+                        "derivatives",
+
+                    "current_value":
+                        150000
+                }
+            ]
+        }
 
         client = await create_client(
             db,
             payload
         )
 
+        # =========================================
+        # Create CRM Profile
+        # =========================================
+
+        crm_profile = CRMProfile(
+
+            client_id=client.client_id,
+
+            client_segment="HNI",
+
+            risk_appetite="aggressive",
+
+            investment_goal="wealth_growth",
+
+            relationship_years=12,
+
+            credit_score=580,
+
+            advisor_notes=(
+                "High-risk leveraged client "
+                "requiring manual review"
+            )
+        )
+
+        db.add(crm_profile)
+
+        db.commit()
         logger.info(
-            f"Mock client created "
+            f"HITL test client created "
             f"client_id={client.client_id}"
         )
 
         return {
+
             "status": "success",
-            "message": "Mock client created",
-            "client_id": client.client_id
+
+            "message":
+                "HITL test client created",
+
+            "client_id":
+                client.client_id
         }
 
     except Exception as error:
 
         logger.error(
-            f"Mock client creation failed: "
+            f"HITL client creation failed: "
             f"{str(error)}",
             exc_info=True
         )

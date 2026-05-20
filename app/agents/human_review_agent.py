@@ -28,4 +28,8 @@ async def human_review_agent(state):
 
     state["human_review"] = approval
 
+    state["execution_logs"].append(
+        "Workflow paused for human review"
+    )
+
     return state
