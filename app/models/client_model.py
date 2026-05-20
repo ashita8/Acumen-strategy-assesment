@@ -1,8 +1,7 @@
 from sqlalchemy import (
     Column,
     String,
-    Float,
-    Integer
+    Float
 )
 
 from app.core.database import Base
@@ -12,18 +11,23 @@ class Client(Base):
 
     __tablename__ = "clients"
 
-    id = Column(Integer, primary_key=True)
-
     client_id = Column(
         String,
-        unique=True,
-        nullable=False
+        primary_key=True
     )
 
-    name = Column(String, nullable=False)
+    name = Column(
+        String
+    )
 
-    monthly_income = Column(Float)
+    monthly_income = Column(
+        Float
+    )
 
-    monthly_expenses = Column(Float)
+    monthly_expenses = Column(
+        Float
+    )
 
-    savings_balance = Column(Float)
+    savings_balance = Column(
+        Float
+    )

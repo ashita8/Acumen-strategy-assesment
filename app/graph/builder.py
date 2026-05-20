@@ -172,6 +172,38 @@ def build_graph():
         "LangGraph workflow "
         "compiled successfully"
     )
+    compiled_graph = graph_builder.compile(
+        checkpointer=cp.checkpointer
+    )
+
+    try:
+
+        logger.info(
+            "Generating workflow PNG"
+        )
+
+        graph_png = (
+            compiled_graph
+            .get_graph(xray=True)
+            .draw_mermaid_png()
+        )
+
+        with open(
+            "workflow.png",
+            "wb"
+        ) as f:
+
+            f.write(graph_png)
+
+        logger.info(
+            "Workflow PNG generated successfully"
+        )
+
+    except Exception as e:
+
+        logger.exception(
+            f"PNG generation failed: {str(e)}"
+        )
 
     # =====================================================
     # Compile Graph
@@ -190,7 +222,6 @@ def build_graph():
 #     with open("workflow.png", "wb") as f:
 #         f.write(graph_png)
 
-   # return compiled_graph
-    return graph_builder.compile(
-        checkpointer=cp.checkpointer
-    )
+     
+    
+    return compiled_graph

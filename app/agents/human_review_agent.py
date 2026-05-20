@@ -1,53 +1,26 @@
 from langgraph.types import interrupt
 
-from app.services.logging_service import (
-    logger
-)
+from app.services.logging_service import logger
 
 
 async def human_review_agent(state):
 
     logger.info(
-        "Pausing workflow for human review"
+        "Waiting for human approval"
     )
 
-    review_payload = {
-        "client_id": state.get(
-            "client_id"
-        ),
+    approval = interrupt({
 
-        "portfolio_analysis": state.get(
-            "portfolio_analysis"
-        ),
+        "message":
+            "Approve advisory workflow?",
 
-        "risk_assessment": state.get(
-            "risk_assessment"
-        ),
+        "portfolio_analysis":
+            state["portfolio_analysis"],
 
-        "anomalies": state.get(
-            "anomalies"
-        )
-    }
+        "risk_analysis":
+            state.get("risk_analysis")
+    })
 
-    human_decision = interrupt(
-        {
-            "message": (
-                "Human approval required"
-            ),
-            "review_data": review_payload
-        }
-    )
+    state["human_approval"] = approval
 
-    logger.info(
-        f"Human review completed: "
-        f"{human_decision}"
-    )
-
-    return {
-        "execution_logs": [
-            "Human review completed"
-        ],
-
-        "human_review_decision":
-            human_decision
-    }
+    return state
