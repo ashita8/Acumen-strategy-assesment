@@ -21,5 +21,13 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+    GROQ_API_KEY: str
+
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    GROQ_TEMPERATURE: float = 0.2
+
+    GROQ_MAX_RETRIES: int = 3
+
 
 settings = Settings()

@@ -19,26 +19,30 @@ async def orchestrator_agent(state):
         state["market_context"]
     )
 
-    savings_ratio = (
-        analysis["savings_ratio"]
+    savings_ratio = analysis.get(
+    "savings_ratio",
+    0.0
     )
 
-    risk_appetite = (
-        crm_profile["risk_appetite"]
+    savings_ratio = analysis.get(
+    "savings_ratio",
+    0.0
+)
+
+    risk_appetite = crm_profile.get(
+        "risk_appetite",
+        "moderate"
     )
 
-    market_sentiment = (
-        market_context[
-            "market_sentiment"
-        ]
+    market_sentiment = market_context.get(
+        "market_sentiment",
+        "neutral"
     )
 
-    market_volatility = (
-        market_context[
-            "market_volatility"
-        ]
+    market_volatility = market_context.get(
+        "market_volatility",
+        "medium"
     )
-
     should_run_risk_analysis = False
 
     if savings_ratio < 0.3:

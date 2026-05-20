@@ -1,28 +1,45 @@
-from app.services.logging_service import logger
+from langchain_core.messages import SystemMessage, HumanMessage
+from app.services.llm_service import LLMService
 
+llm = LLMService.get_llm()
 
 async def risk_evaluator_agent(state):
 
-    logger.info(
-        "Evaluating client risk profile"
-    )
+    try:
 
-    analysis = state["portfolio_analysis"]
+        portfolio_analysis = state.get("portfolio_analysis", {})
 
-    risk_level = "LOW"
+        system_prompt = """
+        You are a financial risk evaluator.
 
-    if analysis["savings_ratio"] < 0.2:
-        risk_level = "HIGH"
+        Identify:
+        - fraud indicators
+        - risky transaction patterns
+        - compliance concerns
+        - abnormal financial behavior
 
-    elif analysis["savings_ratio"] < 0.4:
-        risk_level = "MEDIUM"
+        Return structured JSON.
+        """
 
-    state["risk_assessment"] = {
-        "risk_level": risk_level
-    }
+        human_prompt = f"""
+        Portfolio Analysis:
 
-    state["execution_logs"].append(
-        "Risk evaluation completed"
-    )
+        {portfolio_analysis}
+        """
 
-    return state
+        response = await llm.ainvoke([
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=human_prompt)
+        ])
+
+        return {
+            "risk_assessment": response.content,
+            "errors": state.get("errors", [])
+        }
+
+    except Exception as e:
+
+        return {
+            "risk_assessment": {},
+            "errors": state.get("errors", []) + [str(e)]
+        }
