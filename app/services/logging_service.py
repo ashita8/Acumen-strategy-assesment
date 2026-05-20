@@ -1,33 +1,25 @@
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import os
 
-from app.core.configs import settings
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
 
+logger = logging.getLogger("wealth_advisor")
+logger.setLevel(logging.INFO)
 
-def setup_logger() -> logging.Logger:
-    os.makedirs("logs", exist_ok=True)
+handler = TimedRotatingFileHandler(
+    filename=f"{LOG_DIR}/wealth_advisor.log",
+    when="midnight",
+    interval=1,
+    backupCount=7,
+    encoding="utf-8"
+)
 
-    logger = logging.getLogger("wealth_advisor")
+formatter = logging.Formatter(
+    "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
 
-    if logger.handlers:
-        return logger
+handler.setFormatter(formatter)
 
-    logger.setLevel(settings.LOG_LEVEL)
-
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-    )
-
-    file_handler = logging.FileHandler("logs/system.log")
-    file_handler.setFormatter(formatter)
-
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
-
-    logger.addHandler(file_handler)
-    logger.addHandler(stream_handler)
-
-    return logger
-
-
-logger = setup_logger()
+logger.addHandler(handler)
