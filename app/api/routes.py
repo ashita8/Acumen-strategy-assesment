@@ -3,11 +3,14 @@ from fastapi import Depends
 from fastapi import HTTPException
 
 from sqlalchemy.orm import Session
-
+import uuid
 from app.api.dependencies import get_db
 
 from app.graph.builder import build_graph
-
+from langgraph.types import Command
+from app.schemas.hitl_schema import (
+    HITLResponseSchema
+)
 from app.services.faker_service import (
     generate_mock_client
 )
@@ -35,6 +38,12 @@ from app.services.logging_service import (
     logger
 )
 
+from app.services.workflow_session_service import (
+
+    save_workflow_session,
+
+    get_latest_interrupted_thread_id
+)
 router = APIRouter()
 
 
@@ -87,7 +96,10 @@ async def fetch_clients():
     "/advisory/run/{client_id}"
 )
 async def run_advisory_analysis(
-    client_id: str
+
+    client_id: str,
+
+    payload: HITLResponseSchema | None = None
 ):
 
     try:
@@ -99,22 +111,169 @@ async def run_advisory_analysis(
 
         graph = build_graph()
 
-        config = {
-            "configurable": {
-                "thread_id": (
-                    f"{client_id}_wealth_session"
+        # =========================================
+        # Detect Resume Request
+        # =========================================
+
+        is_resume_request = (
+
+            payload is not None
+
+            and
+
+            payload.approved == True
+        )
+
+        logger.info(
+            f"is_resume_request="
+            f"{is_resume_request}"
+        )
+
+        # =========================================
+        # Resume Interrupted Workflow
+        # =========================================
+
+        if is_resume_request:
+
+            logger.info(
+                "Fetching interrupted workflow session"
+            )
+
+            thread_id = (
+                get_latest_interrupted_thread_id(
+                    client_id
                 )
+            )
+
+            if not thread_id:
+
+                return {
+
+                    "status": "failed",
+
+                    "error":
+                        "No interrupted workflow found"
+                }
+
+            logger.info(
+                f"Resuming workflow "
+                f"thread_id={thread_id}"
+            )
+
+        # =========================================
+        # Start Fresh Workflow
+        # =========================================
+
+        else:
+
+            logger.info(
+                "Creating new workflow session"
+            )
+
+            thread_id = str(
+                uuid.uuid4()
+            )
+
+            save_workflow_session(
+
+                client_id=client_id,
+
+                thread_id=thread_id,
+
+                status="running"
+            )
+
+            logger.info(
+                f"New workflow session created "
+                f"thread_id={thread_id}"
+            )
+
+        # =========================================
+        # LangGraph Config
+        # =========================================
+
+        config = {
+
+            "configurable": {
+
+                "thread_id":
+                    thread_id
             }
         }
 
-        result = await run_advisory_workflow(
-            client_id=client_id,
-            graph=graph,
+        # =========================================
+        # Resume Existing Workflow
+        # =========================================
+
+        if is_resume_request:
+
+            logger.info(
+                "Resuming interrupted workflow"
+            )
+
+            result = await graph.ainvoke(
+
+                Command(
+                    resume={
+
+                        "approved":
+                            payload.approved,
+
+                        "advisor_notes":
+                            payload.advisor_notes
+                    }
+                ),
+
+                config=config
+            )
+
+        # =========================================
+        # Start Fresh Workflow
+        # =========================================
+
+        else:
+
+            logger.info(
+                "Starting fresh workflow"
+            )
+
+            result = await run_advisory_workflow(
+
+                client_id=client_id,
+
+                graph=graph,
+
+                config=config
+            )
+
+        # =========================================
+        # Fetch Latest Persisted State
+        # =========================================
+
+        latest_state = await graph.aget_state(
             config=config
         )
+        if latest_state.next:
+
+            return {
+
+                "status": "interrupted",
+
+                "thread_id": thread_id,
+
+                "message":
+                    "Human approval required",
+
+                "interrupt_data":
+                    latest_state.tasks
+            }
+
+        final_state = latest_state.values
 
         formatted_response = (
-            format_final_response(result)
+            format_final_response(
+                final_state
+            )
         )
 
         logger.info(
@@ -123,8 +282,14 @@ async def run_advisory_analysis(
         )
 
         return {
+
             "status": "success",
-            "data": formatted_response
+
+            "thread_id":
+                thread_id,
+
+            "data":
+                formatted_response
         }
 
     except Exception as error:
@@ -137,15 +302,13 @@ async def run_advisory_analysis(
         )
 
         return {
+
             "status": "failed",
-            "error": str(error)
+
+            "error":
+                str(error)
         }
-
-
-# =========================================================
-# Create HITL Test Client
-# =========================================================
-
+        
 @router.post("/clients/hitl")
 async def create_hitl_test_client(
     db: Session = Depends(get_db)

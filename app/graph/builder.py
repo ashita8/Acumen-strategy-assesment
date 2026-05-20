@@ -165,10 +165,6 @@ def build_graph():
         }
     )
 
-    graph_builder.add_edge(
-        "human_review",
-        "advisory_agent"
-    )
 
     # =====================================================
     # Final Output

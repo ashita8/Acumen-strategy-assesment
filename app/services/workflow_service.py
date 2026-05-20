@@ -26,6 +26,9 @@ async def run_advisory_workflow(
 
         "client_id": client_id,
 
+        "thread_id":
+            config["configurable"]["thread_id"],
+
         "client_profile": client_data.get(
             "client_profile",
             {}
@@ -65,6 +68,7 @@ async def run_advisory_workflow(
 
         "errors": []
     }
+    
 
     result = await graph.ainvoke(
         initial_state,
