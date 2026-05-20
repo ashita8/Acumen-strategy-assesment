@@ -3,6 +3,7 @@ version: "3.9"
 services:
 
   postgres:
+
     image: postgres:16
 
     container_name: wealth-advisor-postgres
@@ -20,6 +21,66 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  fastapi:
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: wealth-advisor-api
+
+    restart: always
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/wealth_advisor
+      PYTHONPATH: /app
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - .:/app
+
+    working_dir: /app
+
+    command: >
+      bash -c "
+      echo 'Waiting for database...' &&
+
+      sleep 5 &&
+
+      echo 'Initializing database...' &&
+
+      python -m app.core.init_db &&
+
+      echo 'Running seed data...' &&
+
+      python -m app.scripts.seed_data &&
+
+      echo 'Running CRM profile seeding...' &&
+
+      python -m app.scripts.seed_crm_profiles &&
+
+      echo 'Starting FastAPI server...' &&
+
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      "
 
 volumes:
   postgres_data:
