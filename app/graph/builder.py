@@ -14,10 +14,6 @@ from app.services.logging_service import (
     logger
 )
 
-# =========================================================
-# Agents
-# =========================================================
-
 from app.agents.data_fetcher_agent import (
     data_fetcher_agent
 )
@@ -47,9 +43,20 @@ from app.agents.advisory_agent import (
 )
 
 
-# =========================================================
-# Build LangGraph Workflow
-# =========================================================
+def orchestrator_router(state):
+
+    return state["next_step"]
+
+
+def anomaly_router(state):
+
+    return state["next_step"]
+
+
+def human_review_router(state):
+
+    return state["next_step"]
+
 
 def build_graph():
 
@@ -61,10 +68,6 @@ def build_graph():
     graph_builder = StateGraph(
         AgentState
     )
-
-    # =====================================================
-    # Nodes
-    # =====================================================
 
     graph_builder.add_node(
         "data_fetcher",
@@ -101,10 +104,6 @@ def build_graph():
         advisory_agent
     )
 
-    # =====================================================
-    # Core Flow
-    # =====================================================
-
     graph_builder.add_edge(
         START,
         "data_fetcher"
@@ -120,15 +119,11 @@ def build_graph():
         "orchestrator"
     )
 
-    # =====================================================
-    # Conditional Routing
-    # =====================================================
-
     graph_builder.add_conditional_edges(
 
         "orchestrator",
 
-        lambda state: state["next_step"],
+        orchestrator_router,
 
         {
 
@@ -140,9 +135,6 @@ def build_graph():
         }
     )
 
-    # =====================================================
-    # Risk Evaluation Pipeline
-    # =====================================================
 
     graph_builder.add_edge(
         "risk_evaluator",
@@ -153,7 +145,7 @@ def build_graph():
 
         "anomaly_detector",
 
-        lambda state: state["next_step"],
+        anomaly_router,
 
         {
 
@@ -166,9 +158,21 @@ def build_graph():
     )
 
 
-    # =====================================================
-    # Final Output
-    # =====================================================
+    graph_builder.add_conditional_edges(
+
+        "human_review",
+
+        human_review_router,
+
+        {
+
+            "advisory_agent":
+                "advisory_agent",
+
+            "rejected":
+                END
+        }
+    )
 
     graph_builder.add_edge(
         "advisory_agent",
@@ -179,6 +183,8 @@ def build_graph():
         "LangGraph workflow "
         "compiled successfully"
     )
+
+
     compiled_graph = graph_builder.compile(
         checkpointer=cp.checkpointer
     )
@@ -190,8 +196,11 @@ def build_graph():
         )
 
         graph_png = (
+
             compiled_graph
+
             .get_graph(xray=True)
+
             .draw_mermaid_png()
         )
 
@@ -206,29 +215,11 @@ def build_graph():
             "Workflow PNG generated successfully"
         )
 
-    except Exception as e:
+    except Exception as error:
 
         logger.exception(
-            f"PNG generation failed: {str(e)}"
+            f"PNG generation failed: "
+            f"{str(error)}"
         )
 
-    # =====================================================
-    # Compile Graph
-    # =====================================================
-#     compiled_graph = graph_builder.compile(
-#     checkpointer=cp.checkpointer
-# )
-#     print(compiled_graph.save("compiled_workflow.json"))
-
-#     graph_png = (
-#         compiled_graph
-#         .get_graph(xray=True)
-#         .draw_mermaid_png()
-#     )
-
-#     with open("workflow.png", "wb") as f:
-#         f.write(graph_png)
-
-     
-    
     return compiled_graph
