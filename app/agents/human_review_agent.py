@@ -6,21 +6,26 @@ from app.services.logging_service import logger
 async def human_review_agent(state):
 
     logger.info(
-        "Waiting for human approval"
+        "Human review required"
     )
 
-    approval = interrupt({
+    review_payload = {
+
+        "client_id":
+            state["client_profile"]["client_id"],
+
+        "risk_level":
+            state["portfolio_analysis"]["overall_risk_level"],
+
+        "anomalies":
+            state["anomalies"],
 
         "message":
-            "Approve advisory workflow?",
+            "Advisor approval required"
+    }
 
-        "portfolio_analysis":
-            state["portfolio_analysis"],
+    approval = interrupt(review_payload)
 
-        "risk_analysis":
-            state.get("risk_analysis")
-    })
-
-    state["human_approval"] = approval
+    state["human_review"] = approval
 
     return state

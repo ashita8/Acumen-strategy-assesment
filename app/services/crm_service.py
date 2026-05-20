@@ -6,7 +6,8 @@ async def get_crm_profile(
 
         "client_segment": "retail",
 
-        "risk_appetite": "moderate",
+        "risk_appetite": "bearish",
+        "market_volatility": "high",
 
         "investment_goal":
             "capital_preservation",

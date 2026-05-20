@@ -149,9 +149,20 @@ def build_graph():
         "anomaly_detector"
     )
 
-    graph_builder.add_edge(
+    graph_builder.add_conditional_edges(
+
         "anomaly_detector",
-        "human_review"
+
+        lambda state: state["next_step"],
+
+        {
+
+            "human_review":
+                "human_review",
+
+            "advisory_agent":
+                "advisory_agent"
+        }
     )
 
     graph_builder.add_edge(

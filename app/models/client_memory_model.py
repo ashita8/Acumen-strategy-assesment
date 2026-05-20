@@ -1,29 +1,40 @@
 from sqlalchemy import (
     Column,
     String,
-    Float,
-    Integer
+    Text,
+    Integer,
+    DateTime
 )
+
+from datetime import datetime
 
 from app.core.database import Base
 
 
 class ClientMemory(Base):
 
-    __tablename__ = "clients_memory"
+    __tablename__ = "client_memory"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(
+        Integer,
+        primary_key=True
+    )
 
     client_id = Column(
         String,
-        unique=True,
         nullable=False
     )
 
-    name = Column(String, nullable=False)
+    memory_type = Column(
+        String,
+        nullable=False
+    )
 
-    monthly_income = Column(Float)
+    memory_summary = Column(
+        Text
+    )
 
-    monthly_expenses = Column(Float)
-
-    savings_balance = Column(Float)
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
