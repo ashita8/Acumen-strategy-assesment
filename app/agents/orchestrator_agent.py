@@ -63,7 +63,7 @@ async def orchestrator_agent(state):
     if should_run_risk_analysis:
 
         state["next_step"] = (
-            "risk_evaluator_agent"
+            "risk_evaluator"
         )
 
         state["execution_logs"].append(
@@ -79,6 +79,7 @@ async def orchestrator_agent(state):
         state["execution_logs"].append(
             "Routing directly to advisory workflow"
         )
+
     if len(state["errors"]) >= 2:
 
         state["next_step"] = (

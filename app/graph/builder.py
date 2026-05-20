@@ -176,21 +176,21 @@ def build_graph():
     # =====================================================
     # Compile Graph
     # =====================================================
-    compiled_graph = graph_builder.compile(
-    checkpointer=cp.checkpointer
-)
-    print(compiled_graph.save("compiled_workflow.json"))
+#     compiled_graph = graph_builder.compile(
+#     checkpointer=cp.checkpointer
+# )
+#     print(compiled_graph.save("compiled_workflow.json"))
 
-    graph_png = (
-        compiled_graph
-        .get_graph(xray=True)
-        .draw_mermaid_png()
+#     graph_png = (
+#         compiled_graph
+#         .get_graph(xray=True)
+#         .draw_mermaid_png()
+#     )
+
+#     with open("workflow.png", "wb") as f:
+#         f.write(graph_png)
+
+   # return compiled_graph
+    return graph_builder.compile(
+        checkpointer=cp.checkpointer
     )
-
-    with open("workflow.png", "wb") as f:
-        f.write(graph_png)
-
-    return compiled_graph
-    # return graph_builder.compile(
-    #     checkpointer=cp.checkpointer
-    # )
