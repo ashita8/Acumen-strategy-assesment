@@ -89,16 +89,17 @@ def build_workflow():
         "orchestrator_agent"
     )
 
+    
     workflow.add_conditional_edges(
-        "orchestrator_agent",
-        route_workflow,
-        {
-            "risk_evaluator_agent":
-                "risk_evaluator_agent",
+    "orchestrator_agent",
 
-            "advisory_agent":
-                "advisory_agent"
-        }
+    lambda state: state["next_step"],
+
+    {
+        "risk_evaluator_agent": "risk_evaluator_agent",
+
+        "advisory_agent": "advisory_agent"
+    }
     )
 
     workflow.add_edge(
@@ -117,7 +118,12 @@ def build_workflow():
     )
 
     compiled_workflow = workflow.compile()
+    graph_png = compiled_workflow.get_graph(xray=True).draw_mermaid_png()
 
+    with open("agent_workflow.png", "wb") as f:
+        f.write(graph_png)
+
+    print("Saved")
     save_workflow_image(
         compiled_workflow
     )
@@ -126,7 +132,7 @@ def build_workflow():
 
 
 def save_workflow_image(workflow):
-
+    print("******************************")
     docs_path = Path("docs")
 
     docs_path.mkdir(

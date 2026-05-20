@@ -1,6 +1,8 @@
 from langchain_core.messages import SystemMessage, HumanMessage
 from app.services.llm_service import LLMService
-
+from app.services.memory_service import (
+    MemoryService
+)
 llm = LLMService.get_llm()
 
 
@@ -22,7 +24,12 @@ async def advisory_agent(state):
             "anomaly_report",
             {}
         )
-
+        #long term memory retrieval
+        historical_memories = (
+            await MemoryService.get_memories(
+                state.get("client_id")
+            )
+        )
         system_prompt = """
         You are a senior Wealth Advisor Assistant.
 
@@ -44,10 +51,13 @@ async def advisory_agent(state):
         {portfolio_analysis}
 
         Risk Analysis:
-        {risk_analysis}
+        {risk_assessment}
 
         Anomaly Report:
         {anomaly_report}
+
+        Historical Advisory Insights:
+        {historical_memories}
         """
 
         response = await llm.ainvoke([
@@ -55,13 +65,24 @@ async def advisory_agent(state):
             HumanMessage(content=human_prompt)
         ])
 
+        await MemoryService.save_memory(
+            client_id=state.get(
+                "client_id"
+            ),
+
+            memory_type="advisory_summary",
+
+            memory_summary=response.content
+        )
+
         return {
-            "final_response": response.content
+            "advisory_report": response.content,
+            "errors": state.get("errors", [])
         }
 
     except Exception as e:
 
         return {
-            "final_response": {},
+            "advisory_report": {},
             "errors": state.get("errors", []) + [str(e)]
         }
